@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import {toast,ToastContainer} from 'react-toastify';
-import 'react-toastify/dist/ReatToastify.css';
+import 'react-toastify/dist/ReactToastify.css';
 import { BASE_URL } from '../config';
 
 function HomePage() {
@@ -47,6 +47,7 @@ function HomePage() {
           <p className="text-center text-gray-600 mt-4">{status}</p>
         </form>
       </div>
+      <ToastContainer />
     </div>
   );
 }
