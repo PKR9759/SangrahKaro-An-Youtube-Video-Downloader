@@ -1,12 +1,26 @@
 import React, { useState } from 'react';
+import axios from 'axios';
+import {toast,ToastContainer} from 'react-toastify';
+import 'react-toastify/dist/ReatToastify.css';
+import { BASE_URL } from '../config';
 
 function HomePage() {
   const [url, setUrl] = useState('');
   const [status, setStatus] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
     setStatus(`Processing URL: ${url}`);
+
+    try{
+      const response=await axios.post(`${BASE_URL}/download`,{url});
+      setStatus(`Download link: ${response.data.downloadUrl}`);
+      toast.success('Video link retrieved successfully!');
+    }
+    catch (error) {
+      setStatus('Failed to retrieve video information.');
+      toast.error('Failed to retrieve video information. Please check the URL and try again.');
+    }
     
   };
 
