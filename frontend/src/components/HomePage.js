@@ -3,6 +3,9 @@ import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { BASE_URL } from '../config';
+import QualitySelector from './QualitySelector';
+import FormatSwitch from './FormatSwitch';
+import VideoItem from './VideoItem';
 
 export default function HomePage() {
   const [url, setUrl] = useState('');
@@ -20,12 +23,10 @@ export default function HomePage() {
       const response = await axios.post(`${BASE_URL}/get-videos`, { url });
       setVideos(response.data.videos);
       setStatus('Videos retrieved successfully!');
-
     } catch (error) {
       setStatus('Failed to retrieve video information.');
       toast.error('Failed to retrieve video information. Please check the URL and try again.');
     }
-
   };
 
   const handleSelectVideo = (videoId) => {
@@ -35,82 +36,60 @@ export default function HomePage() {
     }));
   };
 
-  const handleDownload=async () => {
-    setStatus("Downloading videos...");
+  const handleDownload = async () => {
+    setStatus('Downloading videos...');
     for (const [videoId, options] of Object.entries(selectedVideos)) {
-      
-        try {
-          const response = await axios.post(`${BASE_URL}/download`, { videoId, ...options }, { responseType: 'blob' });
-          const downloadUrl = window.URL.createObjectURL(new Blob([response.data]));
-          const link = document.createElement('a');
-          link.href = downloadUrl;
-          link.setAttribute('download', `${videoId}.mp4`);
-          document.body.appendChild(link);
-          link.click();
-          link.remove();
-          toast.success(`Video ${videoId} downloaded successfully!`);
-        } catch (error) {
-          toast.error(`Failed to download video ${videoId}.`);
-        }
+      try {
+        const response = await axios.post(`${BASE_URL}/download`, { videoId, ...options }, { responseType: 'blob' });
+        const downloadUrl = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.setAttribute('download', `${videoId}.mp4`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        toast.success(`Video ${videoId} downloaded successfully!`);
+      } catch (error) {
+        toast.error(`Failed to download video ${videoId}.`);
       }
-      setStatus('All selected videos processed.');
-
+    }
+    setStatus('All selected videos processed.');
   };
 
-
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">
-      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">YouTube Downloader</h1>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-black p-6">
+      <div className="max-w-3xl w-full bg-gray-800 p-8 rounded-lg shadow-lg">
+        <h1 className="text-4xl font-bold text-center text-red-500 mb-6">YouTube Downloader</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="url" className="block text-lg font-medium text-gray-700 mb-2">Enter YouTube URL:</label>
+            <label htmlFor="url" className="block text-lg font-medium text-gray-300 mb-2">Enter YouTube URL:</label>
             <input
               id="url"
               type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-300"
+              className="w-full p-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-300"
               placeholder="https://www.youtube.com/watch?v=example"
               required
             />
           </div>
-          <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+          <button type="submit" className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-300">
             Get Videos
           </button>
-          <p className="text-center text-gray-600 mt-4">{status}</p>
+          <p className="text-center text-gray-400 mt-4">{status}</p>
         </form>
         {videos.length > 0 && (
-          <div className="mt-4">
+          <div className="mt-4 space-y-4">
             {videos.map((video) => (
-              <div key={video.id} className="border p-4 mb-2">
-                <h2 className="text-xl font-semibold">{video.title}</h2>
-                <div className="flex flex-col">
-                  <select
-                    value={globalQuality}
-                    onChange={(e) => setGlobalQuality(e.target.value)}
-                    className="border p-2 mb-2"
-                  >
-                    <option value="144p">144p</option>
-                    <option value="360p">360p</option>
-                    <option value="720p">720p</option>
-                  </select>
-                  <select
-                    value={globalFormat}
-                    onChange={(e) => setGlobalFormat(e.target.value)}
-                    className="border p-2 mb-2"
-                  >
-                    <option value="video">Video</option>
-                    <option value="mp3">MP3</option>
-                  </select>
-                  <button
-                    onClick={() => handleSelectVideo(video.id)}
-                    className="bg-blue-500 text-white p-2 rounded mb-2"
-                  >
-                    Select for Download
-                  </button>
-                </div>
-              </div>
+              <VideoItem
+                key={video.id}
+                video={video}
+                globalQuality={globalQuality}
+                setGlobalQuality={setGlobalQuality}
+                globalFormat={globalFormat}
+                setGlobalFormat={setGlobalFormat}
+                onSelect={() => handleSelectVideo(video.id)}
+              />
             ))}
             {Object.keys(selectedVideos).length > 0 && (
               <button
@@ -127,5 +106,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-
