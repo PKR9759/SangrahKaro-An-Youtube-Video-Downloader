@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -14,6 +14,28 @@ export default function HomePage() {
   const [globalQuality, setGlobalQuality] = useState('360p');
   const [globalFormat, setGlobalFormat] = useState('video');
   const [selectedVideos, setSelectedVideos] = useState({});
+  const [applyGlobalSettings, setApplyGlobalSettings] = useState(true);
+  const [selectAll, setSelectAll] = useState(false);
+
+  useEffect(() => {
+    if (applyGlobalSettings) {
+      setSelectedVideos(videos.reduce((acc, video) => {
+        acc[video.id] = { quality: globalQuality, format: globalFormat };
+        return acc;
+      }, {}));
+    }
+  }, [applyGlobalSettings, globalQuality, globalFormat, videos]);
+
+  useEffect(() => {
+    if (selectAll) {
+      setSelectedVideos(videos.reduce((acc, video) => {
+        acc[video.id] = { quality: globalQuality, format: globalFormat };
+        return acc;
+      }, {}));
+    } else {
+      setSelectedVideos({});
+    }
+  }, [selectAll, videos, globalQuality, globalFormat]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,11 +51,20 @@ export default function HomePage() {
     }
   };
 
-  const handleSelectVideo = (videoId) => {
-    setSelectedVideos(prevVideos => ({
-      ...prevVideos,
-      [videoId]: { quality: globalQuality, format: globalFormat }
-    }));
+  const handleSelectVideo = (videoId, quality, format) => {
+    setSelectedVideos(prevVideos => {
+      const newSelection = { ...prevVideos };
+      if (newSelection[videoId]) {
+        delete newSelection[videoId];
+      } else {
+        newSelection[videoId] = { quality, format };
+      }
+      return newSelection;
+    });
+  };
+
+  const handleSelectAll = () => {
+    setSelectAll(prev => !prev);
   };
 
   const handleDownload = async () => {
@@ -44,7 +75,7 @@ export default function HomePage() {
         const downloadUrl = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement('a');
         link.href = downloadUrl;
-        link.setAttribute('download', `${videoId}.mp4`);
+        link.setAttribute('download', `${videoId}.${options.format}`);
         document.body.appendChild(link);
         link.click();
         link.remove();
@@ -57,9 +88,9 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-black p-6">
-      <div className="max-w-3xl w-full bg-gray-800 p-8 rounded-lg shadow-lg">
-        <h1 className="text-4xl font-bold text-center text-red-500 mb-6">YouTube Downloader</h1>
+    <div className="flex flex-col min-h-screen bg-gray-900 text-white p-6">
+      <div className="w-full max-w-screen-xl mx-auto bg-gray-800 p-8 rounded-lg shadow-lg">
+        <h1 className="text-4xl font-bold text-center text-red-600 mb-6">YouTube Downloader</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="url" className="block text-lg font-medium text-gray-300 mb-2">Enter YouTube URL:</label>
@@ -78,19 +109,52 @@ export default function HomePage() {
           </button>
           <p className="text-center text-gray-400 mt-4">{status}</p>
         </form>
+
         {videos.length > 0 && (
-          <div className="mt-4 space-y-4">
+          <div className="mt-6 space-y-6">
+            <div className="p-6 bg-gray-700 border border-gray-600 rounded-lg shadow-lg mb-6">
+              <h2 className="text-xl font-bold text-red-400 mb-4">Global Settings</h2>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-lg">Apply Global Settings:</span>
+                <button
+                  onClick={() => setApplyGlobalSettings(!applyGlobalSettings)}
+                  className={`p-2 rounded-lg text-white ${applyGlobalSettings ? 'bg-red-600' : 'bg-gray-600'}`}
+                >
+                  {applyGlobalSettings ? 'Disable' : 'Enable'}
+                </button>
+              </div>
+              {applyGlobalSettings && (
+                <div className="flex space-x-4 mb-4">
+                  <QualitySelector
+                    quality={globalQuality}
+                    setQuality={setGlobalQuality}
+                  />
+                  <FormatSwitch
+                    format={globalFormat}
+                    setFormat={setGlobalFormat}
+                  />
+                </div>
+              )}
+              <button
+                onClick={handleSelectAll}
+                className={`w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300`}
+              >
+                {selectAll ? 'Deselect All' : 'Select All'}
+              </button>
+            </div>
+
             {videos.map((video) => (
               <VideoItem
                 key={video.id}
                 video={video}
                 globalQuality={globalQuality}
-                setGlobalQuality={setGlobalQuality}
                 globalFormat={globalFormat}
-                setGlobalFormat={setGlobalFormat}
-                onSelect={() => handleSelectVideo(video.id)}
+                selectedSettings={selectedVideos[video.id]}
+                applyGlobalSettings={applyGlobalSettings}
+                onSelect={(quality, format) => handleSelectVideo(video.id, quality, format)}
               />
             ))}
+
             {Object.keys(selectedVideos).length > 0 && (
               <button
                 onClick={handleDownload}

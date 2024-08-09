@@ -1,23 +1,68 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import QualitySelector from './QualitySelector';
 import FormatSwitch from './FormatSwitch';
 
-const VideoItem = ({ video, globalQuality, setGlobalQuality, globalFormat, setGlobalFormat, onSelect }) => {
+const VideoItem = ({ video, globalQuality, globalFormat, selectedSettings, applyGlobalSettings, onSelect }) => {
+  const [quality, setQuality] = useState(selectedSettings?.quality || globalQuality);
+  const [format, setFormat] = useState(selectedSettings?.format || globalFormat);
+  const [isSelected, setIsSelected] = useState(!!selectedSettings);
+
+  useEffect(() => {
+    if (applyGlobalSettings) {
+      setQuality(globalQuality);
+      setFormat(globalFormat);
+    } else {
+      setQuality(selectedSettings?.quality || globalQuality);
+      setFormat(selectedSettings?.format || globalFormat);
+    }
+  }, [applyGlobalSettings, globalQuality, globalFormat, selectedSettings]);
+
+  const handleQualityChange = (newQuality) => {
+    if (!applyGlobalSettings) {
+      setQuality(newQuality);
+      onSelect(newQuality, format);
+    }
+  };
+
+  const handleFormatChange = (newFormat) => {
+    if (!applyGlobalSettings) {
+      setFormat(newFormat);
+      onSelect(quality, newFormat);
+    }
+  };
+
+  const handleSelect = () => {
+    setIsSelected(prev => !prev);
+    if (applyGlobalSettings) {
+      onSelect(globalQuality, globalFormat);
+    } else {
+      onSelect(quality, format);
+    }
+  };
+
   return (
-    <div className="bg-gray-900 p-4 rounded-lg border border-gray-700 flex items-center space-x-4">
-      <img src={`https://img.youtube.com/vi/${video.id}/hqdefault.jpg`} alt={video.title} className="w-16 h-16 object-cover rounded-lg"/>
-      <div className="flex-1 overflow-hidden">
+    <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 flex items-center space-x-4">
+      <img src={`https://img.youtube.com/vi/${video.id}/hqdefault.jpg`} alt={video.title} className="w-24 h-16 object-cover rounded-lg"/>
+      <div className="flex-1 flex flex-col justify-between">
         <h2 className="text-lg font-semibold text-white truncate">{video.title}</h2>
-      </div>
-      <div className="flex flex-col items-center">
-        <QualitySelector quality={globalQuality} setQuality={setGlobalQuality} />
-        <FormatSwitch format={globalFormat} setFormat={setGlobalFormat} />
-        <button
-          onClick={onSelect}
-          className="bg-red-600 text-white px-4 py-2 rounded-lg mt-2 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-300"
-        >
-          Select for Download
-        </button>
+        <div className="flex items-center justify-between space-x-4 mt-2">
+          <QualitySelector
+            quality={quality}
+            setQuality={handleQualityChange}
+            disabled={applyGlobalSettings}
+          />
+          <FormatSwitch
+            format={format}
+            setFormat={handleFormatChange}
+            disabled={applyGlobalSettings}
+          />
+          <button
+            onClick={handleSelect}
+            className={`px-4 py-2 rounded-lg transition duration-300 ${isSelected ? 'bg-green-600' : 'bg-red-600'} text-white hover:${isSelected ? 'bg-green-700' : 'bg-red-700'} focus:outline-none focus:ring-2 focus:ring-green-500`}
+          >
+            {isSelected ? 'Selected' : 'Select for Download'}
+          </button>
+        </div>
       </div>
     </div>
   );
