@@ -1,8 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const ytdl = require('@distube/ytdl-core');//library for download youtube video
-const youtubePlaylist = require('youtube-playlist');//for playlist fetch 
-
+// const { DisTube } = require('distube');
+const ytpl= require('@distube/ytpl');
 require('dotenv').config({ path: './config/.env' });
 const app = express();
 app.use(express.json());
@@ -12,19 +12,6 @@ const PORT = process.env.PORT;
 const convertToFullURL = (shortUrl) => {
     const match = shortUrl.match(/youtu\.be\/([^?&]+)/);
     return match ? `https://www.youtube.com/watch?v=${match[1]}` : shortUrl;
-};
-
-// Helper function to fetch playlist items using YouTube Data API v3
-const fetchPlaylistVideos = async (playlistId) => {
-    const url = `https://www.googleapis.com/youtube/v3/playlistItems`;
-    const params = {
-        part: 'snippet',
-        playlistId: playlistId,
-        maxResults: 50, // Adjust as needed
-        key: YOUTUBE_API_KEY
-    };
-    const response = await axios.get(url, { params });
-    return response.data.items.map(item => `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`);
 };
 
 
@@ -38,22 +25,35 @@ app.post('/get-videos', async (req, res) => {
             // Handle playlist URL
 
             const playlistId = new URL(fullUrl).searchParams.get('list');
-            // console.log(playlistId);
             if (!playlistId) {
                 return res.status(400).json({ error: 'Invalid playlist URL' });
             }
-            const playlist = await youtubePlaylist(playlistId);
-            console.log("playlist",playlist);
-            const videoDetails = await Promise.all(playlist.items.map(async (videoUrl) => {
-                const info = await ytdl.getInfo(videoUrl);
-                return {
-                    id: info.videoDetails.videoId,
-                    title: info.videoDetails.title,
-                    formats: info.formats
-                };
+
+            const playlist = await ytpl(playlistId);
+            // console.log('Playlist response:', playlist);
+            
+            
+            const videoDetails = await Promise.all(playlist.items.map(async (video) => {
+                const videoUrl = convertToFullURL(video.url); // Ensure URL format is correct
+                console.log('Video URL:', videoUrl);
+
+                try {
+                    const info = await ytdl.getInfo(videoUrl);
+                    return {
+                        id: info.videoDetails.videoId,
+                        title: info.videoDetails.title,
+                        formats: info.formats
+                    };
+                } catch (err) {
+                    console.error('Error retrieving info for video:', videoUrl, err);
+                    return null; // Handle error by skipping this video
+                }
             }));
-            console.log(videoDetails);
-            res.json({ videos: videoDetails });
+
+            // Filter out any null results due to errors
+            const filteredVideoDetails = videoDetails.filter(video => video !== null);
+
+            res.json({ videos: filteredVideoDetails });
         }
         else {
             // Handle single video URL
