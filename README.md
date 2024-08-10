@@ -17,23 +17,23 @@ cd SangrahKaro
 ```
 
 ### 2. Backend Setup
--Navigate to the backend directory:
+- Navigate to the backend directory:
 
 ```bash
 cd backend
 ```
--Install dependencies:
+- Install dependencies:
 
 ```bash
 npm install
 ```
--Create a .env file in the config directory with the following content::
+- Create a .env file in the config directory with the following content::
 
 ```bash
 PORT=your_port_number
 ```
 
--Start the backend server:
+- Start the backend server:
 
 ```bash
 npm start
