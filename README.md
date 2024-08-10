@@ -4,8 +4,8 @@
 
 ## Technologies Used
 
-- **Frontend:** React, Tailwind CSS, React Toastify
-- **Backend:** Express, @distube/YTDL-Core, @distube/Ytpl
+- **Frontend:** ReactJS, Tailwind CSS, React Toastify
+- **Backend:** NodeJs, ExpressJs, @distube/YTDL-Core, @distube/Ytpl
 
 ## Installation and Setup
 
