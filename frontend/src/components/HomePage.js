@@ -6,6 +6,8 @@ import { BASE_URL } from '../config';
 import VideoItem from './VideoItem';
 import { FaArrowDown } from 'react-icons/fa';
 import InstructionalPopup from './InstructionalPopup';
+import FormatSwitch from './FormatSwitch'; // Import the FormatSwitch component
+import QualitySelector from './QualitySelector'; // Import the QualitySelector component
 
 export default function HomePage() {
   const [url, setUrl] = useState('');
@@ -14,14 +16,21 @@ export default function HomePage() {
   const [selectAll, setSelectAll] = useState(false);
   const [selectedVideos, setSelectedVideos] = useState({});
   const [showPopup, setShowPopup] = useState(false);
+  const [globalSettings, setGlobalSettings] = useState(false); // New state for global settings
+  const [globalQuality, setGlobalQuality] = useState('360p');
+  const [globalFormat, setGlobalFormat] = useState('video');
 
   useEffect(() => {
     const updatedSelection = videos.reduce((acc, video) => {
-      acc[video.id] = selectAll;
+      acc[video.id] = {
+        selected: selectAll,
+        quality: globalSettings ? globalQuality : (selectedVideos[video.id]?.quality || '360p'),
+        format: globalSettings ? globalFormat : (selectedVideos[video.id]?.format || 'video'),
+      };
       return acc;
     }, {});
     setSelectedVideos(updatedSelection);
-  }, [selectAll, videos]);
+  }, [selectAll, globalQuality, globalFormat, globalSettings, videos]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,9 +50,8 @@ export default function HomePage() {
     setSelectedVideos(prevSelection => ({
       ...prevSelection,
       [videoId]: {
-        selected: !prevSelection[videoId]?.selected,
-        quality: prevSelection[videoId]?.quality || '360p',
-        format: prevSelection[videoId]?.format || 'mp4'
+        ...prevSelection[videoId],
+        selected: !prevSelection[videoId]?.selected
       }
     }));
   };
@@ -74,7 +82,6 @@ export default function HomePage() {
 
   const handleDownload = () => {
     setShowPopup(true);
-    console.log('handleDownload');
   };
 
   const startDownload = async () => {
@@ -132,6 +139,39 @@ export default function HomePage() {
 
         {videos.length > 0 && (
           <div className="mt-6 space-y-6">
+            <div className="mb-6 p-4 bg-gray-800 rounded-lg">
+              <h2 className="text-xl font-semibold text-white mb-4">For All Videos:</h2>
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center space-x-4">
+                  <div className="flex-1">
+                    <label className="block text-lg font-medium text-gray-300 mb-2 flex items-center">
+                      Quality:
+                      <div className="ml-2">
+                        <QualitySelector quality={globalQuality} setQuality={setGlobalQuality} />
+                      </div>
+                    </label>
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-lg font-medium text-gray-300 mb-2 flex items-center">
+                      Format:
+                      <div className="ml-2">
+                        <FormatSwitch format={globalFormat} setFormat={setGlobalFormat} />
+                      </div>
+                    </label>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={globalSettings}
+                    onChange={() => setGlobalSettings(!globalSettings)}
+                    className="w-5 h-5"
+                  />
+                  <span className="text-gray-300">Apply to all videos</span>
+                </div>
+              </div>
+            </div>
+
             <button
               onClick={handleSelectAll}
               className={`w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300`}
@@ -145,9 +185,9 @@ export default function HomePage() {
                 video={video}
                 isSelected={!!selectedVideos[video.id]?.selected}
                 onSelect={() => handleSelectVideo(video.id)}
-                quality={selectedVideos[video.id]?.quality}
+                quality={selectedVideos[video.id]?.quality || globalQuality}
                 setQuality={(quality) => handleQualityChange(video.id, quality)}
-                format={selectedVideos[video.id]?.format}
+                format={selectedVideos[video.id]?.format || globalFormat}
                 setFormat={(format) => handleFormatChange(video.id, format)}
               />
             ))}
@@ -167,7 +207,6 @@ export default function HomePage() {
       {showPopup && (
         <InstructionalPopup
           onClose={() => {
-            console.log("onClose called");
             setShowPopup(false);
             startDownload(); // Call startDownload on close
           }}
