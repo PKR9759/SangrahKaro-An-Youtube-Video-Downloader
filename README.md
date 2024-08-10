@@ -39,6 +39,21 @@ PORT=your_port_number
 npm start
 ```
 
+### 3. Frontend Setup
+
+- Navigate to the frontend directory:
+
+```bash
+cd ../frontend
+```
+- Install dependencies:
+
+```bash
+npm install
+```
+
+
+
 ### Usage
 1.Open your browser and go to http://localhost:3000  (use your port).  
 
