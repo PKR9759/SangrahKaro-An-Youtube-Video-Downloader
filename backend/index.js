@@ -61,7 +61,6 @@ app.post('/get-videos', async (req, res) => {
         res.status(500).json({ error: 'Failed to retrieve video details' });
     }
 });
-
 app.post('/download', async (req, res) => {
     const { videoId, quality, format } = req.body;
     const fullUrl = `https://www.youtube.com/watch?v=${videoId}`;
@@ -80,7 +79,8 @@ app.post('/download', async (req, res) => {
             if (!chosenFormat) {
                 return res.status(400).json({ error: 'No suitable audio format available' });
             }
-            res.setHeader('Content-Disposition', `attachment; filename="${info.videoDetails.title}.mp3"`);
+            // Set a default filename for MP3
+            res.setHeader('Content-Disposition', 'attachment; filename="default.mp3"');
             ytdl(fullUrl, { format: chosenFormat, filter: 'audioonly' }).pipe(res);
         } else {
             chosenFormat = formats.find(f => f.qualityLabel === quality && f.mimeType.includes('video/mp4')) ||
@@ -89,7 +89,8 @@ app.post('/download', async (req, res) => {
             if (!chosenFormat) {
                 return res.status(400).json({ error: 'No suitable video format available' });
             }
-            res.setHeader('Content-Disposition', `attachment; filename="${info.videoDetails.title}.mp4"`);
+            // Set a default filename for MP4
+            res.setHeader('Content-Disposition', 'attachment; filename="default.mp4"');
             ytdl(fullUrl, { format: chosenFormat }).pipe(res);
         }
     } catch (err) {

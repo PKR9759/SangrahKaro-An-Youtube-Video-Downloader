@@ -51,6 +51,8 @@ export default function HomePage() {
   const handleSelectAll = () => {
     setSelectAll(prev => !prev);
   };
+
+
   const handleQualityChange = (videoId, quality) => {
     setSelectedVideos(prevSelection => ({
       ...prevSelection,
@@ -73,25 +75,39 @@ export default function HomePage() {
   const handleDownload = async () => {
     setStatus('Downloading videos...');
     for (const [videoId, { selected, quality, format }] of Object.entries(selectedVideos)) {
-      if (selected) {
-        try {
-          const response = await axios.post(`${BASE_URL}/download`, { videoId, quality, format }, { responseType: 'blob' });
-          const downloadUrl = window.URL.createObjectURL(new Blob([response.data]));
-          const link = document.createElement('a');
-          link.href = downloadUrl;
-          link.setAttribute('download', `${videoId}.${format}`); // Use video ID and format for file name
-          document.body.appendChild(link);
-          link.click();
-          link.remove();
-          toast.success(`Video ${videoId} downloaded successfully!`);
-        } catch (error) {
-          toast.error(`Failed to download video ${videoId}.`);
+        if (selected) {
+            try {
+                const response = await axios.post(`${BASE_URL}/download`, { videoId, quality, format }, { responseType: 'blob' });
+                
+                // Create a URL object from the response Blob
+                const downloadUrl = window.URL.createObjectURL(new Blob([response.data]));
+                
+                // Get video title from the response or any other source
+                const videoTitle = videos.find(video => video.id === videoId)?.title || 'video';
+                
+                // Generate a file name using the video title
+                const fileName = `${videoTitle}_${quality}.${format}`;
+                
+                // Create an <a> element and trigger the download
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.setAttribute('download', fileName); // Set the desired filename here
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                
+                // Clean up
+                window.URL.revokeObjectURL(downloadUrl);
+
+                toast.success(`Video ${videoTitle} downloaded successfully!`);
+            } catch (error) {
+                toast.error(`Failed to download video ${videoId}.`);
+            }
         }
-      }
     }
     setStatus('All selected videos processed.');
-  };
-  
+};
+
 
   const scrollToBottom = () => {
     window.scrollTo({
