@@ -40,7 +40,7 @@ npm start
 ```
 
 ### Usage
-1.Open your browser and go to http://localhost:3000.  
+1.Open your browser and go to http://localhost:3000  (use your port).  
 
 2.Enter a YouTube video or playlist URL in the input field and click "Get Videos."  
 
@@ -57,5 +57,5 @@ npm start
 
 ### Contact
 
-- For any questions or suggestions, please contact at ** kuldiprparmar9759@gmail.com** .
+- For any questions or suggestions, please contact at kuldiprparmar9759@gmail.com .
 
