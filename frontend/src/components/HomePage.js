@@ -39,24 +39,47 @@ export default function HomePage() {
   const handleSelectVideo = (videoId) => {
     setSelectedVideos(prevSelection => ({
       ...prevSelection,
-      [videoId]: !prevSelection[videoId]
+      [videoId]: {
+        selected: !prevSelection[videoId]?.selected,
+        quality: prevSelection[videoId]?.quality || '360p', // Default quality
+        format: prevSelection[videoId]?.format || 'mp4' // Default format
+      }
     }));
   };
+  
 
   const handleSelectAll = () => {
     setSelectAll(prev => !prev);
   };
+  const handleQualityChange = (videoId, quality) => {
+    setSelectedVideos(prevSelection => ({
+      ...prevSelection,
+      [videoId]: {
+        ...prevSelection[videoId],
+        quality
+      }
+    }));
+  };
 
+  const handleFormatChange = (videoId, format) => {
+    setSelectedVideos(prevSelection => ({
+      ...prevSelection,
+      [videoId]: {
+        ...prevSelection[videoId],
+        format
+      }
+    }));
+  };
   const handleDownload = async () => {
     setStatus('Downloading videos...');
-    for (const [videoId, isSelected] of Object.entries(selectedVideos)) {
-      if (isSelected) {
+    for (const [videoId, { selected, quality, format }] of Object.entries(selectedVideos)) {
+      if (selected) {
         try {
-          const response = await axios.post(`${BASE_URL}/download`, { videoId }, { responseType: 'blob' });
+          const response = await axios.post(`${BASE_URL}/download`, { videoId, quality, format }, { responseType: 'blob' });
           const downloadUrl = window.URL.createObjectURL(new Blob([response.data]));
           const link = document.createElement('a');
           link.href = downloadUrl;
-          link.setAttribute('download', `${videoId}.mp4`); // Use video title or ID for file name
+          link.setAttribute('download', `${videoId}.${format}`); // Use video ID and format for file name
           document.body.appendChild(link);
           link.click();
           link.remove();
@@ -68,6 +91,7 @@ export default function HomePage() {
     }
     setStatus('All selected videos processed.');
   };
+  
 
   const scrollToBottom = () => {
     window.scrollTo({
@@ -112,8 +136,12 @@ export default function HomePage() {
               <VideoItem
                 key={video.id}
                 video={video}
-                isSelected={!!selectedVideos[video.id]}
+                isSelected={!!selectedVideos[video.id]?.selected}
                 onSelect={() => handleSelectVideo(video.id)}
+                quality={selectedVideos[video.id]?.quality}
+                setQuality={(quality) => handleQualityChange(video.id, quality)}
+                format={selectedVideos[video.id]?.format}
+                setFormat={(format) => handleFormatChange(video.id, format)}
               />
             ))}
             {Object.values(selectedVideos).some(selected => selected) && (
