@@ -141,33 +141,28 @@ export default function HomePage() {
           <div className="mt-6 space-y-6">
             <div className="mb-6 p-4 bg-gray-800 rounded-lg">
               <h2 className="text-xl font-semibold text-white mb-4">For All Videos:</h2>
-              <div className="flex flex-col space-y-4">
-                <div className="flex items-center space-x-4">
-                  <div className="flex-1">
-                    <label className="block text-lg font-medium text-gray-300 mb-2 flex items-center">
-                      Quality:
-                      <div className="ml-2">
-                        <QualitySelector quality={globalQuality} setQuality={setGlobalQuality} />
-                      </div>
-                    </label>
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-lg font-medium text-gray-300 mb-2 flex items-center">
-                      Format:
-                      <div className="ml-2">
-                        <FormatSwitch format={globalFormat} setFormat={setGlobalFormat} />
-                      </div>
-                    </label>
-                  </div>
+              <div className="flex items-start justify-between space-x-6">
+                {/* Quality Section */}
+                <div className="flex flex-col items-center flex-1">
+                  <label className="text-lg font-medium text-gray-300 mb-2">Quality:</label>
+                  <QualitySelector quality={globalQuality} setQuality={setGlobalQuality} />
                 </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={globalSettings}
-                    onChange={() => setGlobalSettings(!globalSettings)}
-                    className="w-5 h-5"
-                  />
-                  <span className="text-gray-300">Apply to all videos</span>
+                {/* Format Section */}
+                <div className="flex flex-col items-center flex-1">
+                  <label className="text-lg font-medium text-gray-300 mb-2">Format:</label>
+                  <FormatSwitch format={globalFormat} setFormat={setGlobalFormat} />
+                </div>
+                {/* Apply to All Checkbox */}
+                <div className="flex flex-col items-center flex-1">
+                  <div className="flex items-center space-x-2 mt-9">
+                    <input
+                      type="checkbox"
+                      checked={globalSettings}
+                      onChange={() => setGlobalSettings(!globalSettings)}
+                      className="w-5 h-5"
+                    />
+                    <span className="text-gray-300 ">Apply to all videos</span>
+                  </div>
                 </div>
               </div>
             </div>
