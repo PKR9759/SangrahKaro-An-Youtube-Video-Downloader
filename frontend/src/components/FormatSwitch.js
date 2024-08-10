@@ -18,7 +18,8 @@ const FormatSwitch = ({ format, setFormat }) => {
         />
         <span className="w-4 h-4 border border-gray-500 rounded-full flex items-center justify-center">
           {format === 'video' && (
-            <span className="w-2.5 h-2.5 bg-white rounded-full"></span>
+            <span className="w-2.5 h-2.5 bg-white rounded-full"  style={{display: 'none',
+              userSelect: 'none'}}></span>
           )}
         </span>
         <span>Video</span>

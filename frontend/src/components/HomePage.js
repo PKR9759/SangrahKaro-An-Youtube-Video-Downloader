@@ -4,7 +4,8 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { BASE_URL } from '../config';
 import VideoItem from './VideoItem';
-import { FaArrowDown } from 'react-icons/fa'; // Add this line if using react-icons
+import { FaArrowDown } from 'react-icons/fa';
+import InstructionalPopup from './InstructionalPopup';
 
 export default function HomePage() {
   const [url, setUrl] = useState('');
@@ -12,6 +13,7 @@ export default function HomePage() {
   const [videos, setVideos] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [selectedVideos, setSelectedVideos] = useState({});
+  const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
     const updatedSelection = videos.reduce((acc, video) => {
@@ -25,7 +27,6 @@ export default function HomePage() {
     e.preventDefault();
     setStatus(`Processing URL: ${url}`);
 
-      
     try {
       const response = await axios.post(`${BASE_URL}/get-videos`, { url });
       setVideos(response.data.videos);
@@ -41,17 +42,15 @@ export default function HomePage() {
       ...prevSelection,
       [videoId]: {
         selected: !prevSelection[videoId]?.selected,
-        quality: prevSelection[videoId]?.quality || '360p', // Default quality
-        format: prevSelection[videoId]?.format || 'mp4' // Default format
+        quality: prevSelection[videoId]?.quality || '360p',
+        format: prevSelection[videoId]?.format || 'mp4'
       }
     }));
   };
-  
 
   const handleSelectAll = () => {
     setSelectAll(prev => !prev);
   };
-
 
   const handleQualityChange = (videoId, quality) => {
     setSelectedVideos(prevSelection => ({
@@ -72,48 +71,40 @@ export default function HomePage() {
       }
     }));
   };
-  const handleDownload = async () => {
+
+  const handleDownload = () => {
+    setShowPopup(true);
+    console.log('handleDownload');
+  };
+
+  const startDownload = async () => {
+    setShowPopup(false);
+
     setStatus('Downloading videos...');
     for (const [videoId, { selected, quality, format }] of Object.entries(selectedVideos)) {
-        if (selected) {
-            try {
-                const response = await axios.post(`${BASE_URL}/download`, { videoId, quality, format }, { responseType: 'blob' });
-                
-                // Create a URL object from the response Blob
-                const downloadUrl = window.URL.createObjectURL(new Blob([response.data]));
-                
-                // Get video title from the response or any other source
-                const videoTitle = videos.find(video => video.id === videoId)?.title || 'video';
-                
-                // Generate a file name using the video title
-                const fileName = `${videoTitle}_${quality}.${format}`;
-                
-                // Create an <a> element and trigger the download
-                const link = document.createElement('a');
-                link.href = downloadUrl;
-                link.setAttribute('download', fileName); // Set the desired filename here
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-                
-                // Clean up
-                window.URL.revokeObjectURL(downloadUrl);
+      if (selected) {
+        try {
+          const response = await axios.post(`${BASE_URL}/download`, { videoId, quality, format }, { responseType: 'blob' });
 
-                toast.success(`Video ${videoTitle} downloaded successfully!`);
-            } catch (error) {
-                toast.error(`Failed to download video ${videoId}.`);
-            }
+          const downloadUrl = window.URL.createObjectURL(new Blob([response.data]));
+          const videoTitle = videos.find(video => video.id === videoId)?.title || 'video';
+          const fileName = `${videoTitle}_${quality}.${format}`;
+
+          const link = document.createElement('a');
+          link.href = downloadUrl;
+          link.setAttribute('download', fileName);
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+
+          window.URL.revokeObjectURL(downloadUrl);
+          toast.success(`Video ${videoTitle} downloaded successfully!`);
+        } catch (error) {
+          toast.error(`Failed to download video ${videoId}.`);
         }
+      }
     }
     setStatus('All selected videos processed.');
-};
-
-
-  const scrollToBottom = () => {
-    window.scrollTo({
-      top: document.documentElement.scrollHeight,
-      behavior: 'smooth',
-    });
   };
 
   return (
@@ -173,9 +164,18 @@ export default function HomePage() {
         <ToastContainer />
       </div>
 
-      {/* Go to Bottom Button */}
+      {showPopup && (
+        <InstructionalPopup
+          onClose={() => {
+            console.log("onClose called");
+            setShowPopup(false);
+            startDownload(); // Call startDownload on close
+          }}
+        />
+      )}
+
       <button
-        onClick={scrollToBottom}
+        onClick={() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })}
         className="fixed bottom-4 right-4 bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition duration-300"
       >
         <FaArrowDown size={24} />
