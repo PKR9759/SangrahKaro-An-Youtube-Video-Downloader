@@ -72,10 +72,13 @@ app.post('/download', async (req, res) => {
     try {
         const info = await ytdl.getInfo(fullUrl);
         const formats = info.formats;
-
+        console.log(formats);
         let chosenFormat;
         if (format === 'mp3') {
-            chosenFormat = formats.find(f => f.mimeType.includes('audio/mp4'));
+            chosenFormat = formats.find(f => f.mimeType && f.mimeType.includes('audio/mp4')) ||
+                formats.find(f => f.mimeType && f.mimeType.includes('audio/webm')) ||
+                formats.find(f => f.mimeType && f.mimeType.includes('audio/mpeg'));
+
             if (!chosenFormat) {
                 return res.status(400).json({ error: 'No suitable audio format available' });
             }
