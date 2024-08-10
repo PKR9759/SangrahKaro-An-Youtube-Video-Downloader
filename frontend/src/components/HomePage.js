@@ -3,44 +3,29 @@ import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { BASE_URL } from '../config';
-import QualitySelector from './QualitySelector';
-import FormatSwitch from './FormatSwitch';
 import VideoItem from './VideoItem';
+import { FaArrowDown } from 'react-icons/fa'; // Add this line if using react-icons
 
 export default function HomePage() {
   const [url, setUrl] = useState('');
   const [status, setStatus] = useState('');
   const [videos, setVideos] = useState([]);
-  const [globalQuality, setGlobalQuality] = useState('360p');
-  const [globalFormat, setGlobalFormat] = useState('video');
-  const [selectedVideos, setSelectedVideos] = useState({});
-  const [applyGlobalSettings, setApplyGlobalSettings] = useState(true);
   const [selectAll, setSelectAll] = useState(false);
+  const [selectedVideos, setSelectedVideos] = useState({});
 
   useEffect(() => {
-    if (applyGlobalSettings) {
-      setSelectedVideos(videos.reduce((acc, video) => {
-        acc[video.id] = { quality: globalQuality, format: globalFormat };
-        return acc;
-      }, {}));
-    }
-  }, [applyGlobalSettings, globalQuality, globalFormat, videos]);
-
-  useEffect(() => {
-    if (selectAll) {
-      setSelectedVideos(videos.reduce((acc, video) => {
-        acc[video.id] = { quality: globalQuality, format: globalFormat };
-        return acc;
-      }, {}));
-    } else {
-      setSelectedVideos({});
-    }
-  }, [selectAll, videos, globalQuality, globalFormat]);
+    const updatedSelection = videos.reduce((acc, video) => {
+      acc[video.id] = selectAll;
+      return acc;
+    }, {});
+    setSelectedVideos(updatedSelection);
+  }, [selectAll, videos]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus(`Processing URL: ${url}`);
 
+      
     try {
       const response = await axios.post(`${BASE_URL}/get-videos`, { url });
       setVideos(response.data.videos);
@@ -51,16 +36,11 @@ export default function HomePage() {
     }
   };
 
-  const handleSelectVideo = (videoId, quality, format) => {
-    setSelectedVideos(prevVideos => {
-      const newSelection = { ...prevVideos };
-      if (newSelection[videoId]) {
-        delete newSelection[videoId];
-      } else {
-        newSelection[videoId] = { quality, format };
-      }
-      return newSelection;
-    });
+  const handleSelectVideo = (videoId) => {
+    setSelectedVideos(prevSelection => ({
+      ...prevSelection,
+      [videoId]: !prevSelection[videoId]
+    }));
   };
 
   const handleSelectAll = () => {
@@ -69,22 +49,31 @@ export default function HomePage() {
 
   const handleDownload = async () => {
     setStatus('Downloading videos...');
-    for (const [videoId, options] of Object.entries(selectedVideos)) {
-      try {
-        const response = await axios.post(`${BASE_URL}/download`, { videoId, ...options }, { responseType: 'blob' });
-        const downloadUrl = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.setAttribute('download', `${videoId}.${options.format}`);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        toast.success(`Video ${videoId} downloaded successfully!`);
-      } catch (error) {
-        toast.error(`Failed to download video ${videoId}.`);
+    for (const [videoId, isSelected] of Object.entries(selectedVideos)) {
+      if (isSelected) {
+        try {
+          const response = await axios.post(`${BASE_URL}/download`, { videoId }, { responseType: 'blob' });
+          const downloadUrl = window.URL.createObjectURL(new Blob([response.data]));
+          const link = document.createElement('a');
+          link.href = downloadUrl;
+          link.setAttribute('download', `${videoId}.mp4`); // Use video title or ID for file name
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          toast.success(`Video ${videoId} downloaded successfully!`);
+        } catch (error) {
+          toast.error(`Failed to download video ${videoId}.`);
+        }
       }
     }
     setStatus('All selected videos processed.');
+  };
+
+  const scrollToBottom = () => {
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: 'smooth',
+    });
   };
 
   return (
@@ -112,61 +101,41 @@ export default function HomePage() {
 
         {videos.length > 0 && (
           <div className="mt-6 space-y-6">
-            <div className="p-6 bg-gray-700 border border-gray-600 rounded-lg shadow-lg mb-6">
-              <h2 className="text-xl font-bold text-red-400 mb-4">Global Settings</h2>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-lg">Apply Global Settings:</span>
-                <button
-                  onClick={() => setApplyGlobalSettings(!applyGlobalSettings)}
-                  className={`p-2 rounded-lg text-white ${applyGlobalSettings ? 'bg-red-600' : 'bg-gray-600'}`}
-                >
-                  {applyGlobalSettings ? 'Disable' : 'Enable'}
-                </button>
-              </div>
-              {applyGlobalSettings && (
-                <div className="flex space-x-4 mb-4">
-                  <QualitySelector
-                    quality={globalQuality}
-                    setQuality={setGlobalQuality}
-                  />
-                  <FormatSwitch
-                    format={globalFormat}
-                    setFormat={setGlobalFormat}
-                  />
-                </div>
-              )}
-              <button
-                onClick={handleSelectAll}
-                className={`w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300`}
-              >
-                {selectAll ? 'Deselect All' : 'Select All'}
-              </button>
-            </div>
+            <button
+              onClick={handleSelectAll}
+              className={`w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300`}
+            >
+              {selectAll ? 'Deselect All' : 'Select All'}
+            </button>
 
             {videos.map((video) => (
               <VideoItem
                 key={video.id}
                 video={video}
-                globalQuality={globalQuality}
-                globalFormat={globalFormat}
-                selectedSettings={selectedVideos[video.id]}
-                applyGlobalSettings={applyGlobalSettings}
-                onSelect={(quality, format) => handleSelectVideo(video.id, quality, format)}
+                isSelected={!!selectedVideos[video.id]}
+                onSelect={() => handleSelectVideo(video.id)}
               />
             ))}
-
-            {Object.keys(selectedVideos).length > 0 && (
+            {Object.values(selectedVideos).some(selected => selected) && (
               <button
                 onClick={handleDownload}
                 className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition duration-300"
               >
-                Download Selected Videos
+                Download All Selected Videos
               </button>
             )}
           </div>
         )}
         <ToastContainer />
       </div>
+
+      {/* Go to Bottom Button */}
+      <button
+        onClick={scrollToBottom}
+        className="fixed bottom-4 right-4 bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition duration-300"
+      >
+        <FaArrowDown size={24} />
+      </button>
     </div>
   );
 }
