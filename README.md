@@ -40,16 +40,20 @@ npm start
 ```
 
 ### Usage
-- 1.Open your browser and go to http://localhost:3000.
-- 2.Enter a YouTube video or playlist URL in the input field and click "Get Videos."
-- 3.Select the desired quality and format for each video, or apply global settings.
-- 4.Click "Download All Selected Videos" to start downloading.
+1.Open your browser and go to http://localhost:3000.  
+
+2.Enter a YouTube video or playlist URL in the input field and click "Get Videos."  
+
+3.Select the desired quality and format for each video, or apply global settings.  
+
+4.Click "Download All Selected Videos" to start downloading.  
+
 
 ### Important Notes
 
-Ensure that you have Node.js installed.
-The backend server needs to be running for the frontend to fetch video data.
-Ensure that the .env file is properly configured with the correct port number.
+-Ensure that you have Node.js installed.
+-The backend server needs to be running for the frontend to fetch video data.
+-Ensure that the .env file is properly configured with the correct port number.
 
 ### Contact
 
