@@ -51,9 +51,9 @@ npm start
 
 ### Important Notes
 
--Ensure that you have Node.js installed.
--The backend server needs to be running for the frontend to fetch video data.
--Ensure that the .env file is properly configured with the correct port number.
+- Ensure that you have Node.js installed.
+- The backend server needs to be running for the frontend to fetch video data.
+- Ensure that the .env file is properly configured with the correct port number.
 
 ### Contact
 
