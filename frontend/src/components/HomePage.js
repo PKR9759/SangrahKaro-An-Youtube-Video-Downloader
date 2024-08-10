@@ -95,7 +95,8 @@ export default function HomePage() {
 
           const downloadUrl = window.URL.createObjectURL(new Blob([response.data]));
           const videoTitle = videos.find(video => video.id === videoId)?.title || 'video';
-          const fileName = `${videoTitle}_${quality}.${format}`;
+          
+          const fileName = `${videoTitle}_${quality}.${format==='video' ? 'mp4' : format}`;
 
           const link = document.createElement('a');
           link.href = downloadUrl;
@@ -105,7 +106,7 @@ export default function HomePage() {
           link.remove();
 
           window.URL.revokeObjectURL(downloadUrl);
-          toast.success(`Video ${videoTitle} downloaded successfully!`);
+          toast.success(`Video ${videoTitle} Added to Download successfully!`);
         } catch (error) {
           toast.error(`Failed to download video ${videoId}.`);
         }
@@ -117,10 +118,13 @@ export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 text-white p-6">
       <div className="w-full max-w-screen-xl mx-auto bg-gray-800 p-8 rounded-lg shadow-lg">
-        <h1 className="text-4xl font-bold text-center text-red-600 mb-6">YouTube Downloader</h1>
+        
+        <h1 className="text-4xl font-bold text-center text-red-600 mb-6">Sangrah Karo</h1>
+        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="url" className="block text-lg font-medium text-gray-300 mb-2">Enter YouTube URL:</label>
+            <label htmlFor="url" className="block text-lg font-medium text-gray-300 mb-2">Enter Video / Playlist URL:</label>
             <input
               id="url"
               type="text"

@@ -72,7 +72,7 @@ app.post('/download', async (req, res) => {
     try {
         const info = await ytdl.getInfo(fullUrl);
         const formats = info.formats;
-        console.log(formats);
+        // console.log(formats);
         let chosenFormat;
         if (format === 'mp3') {
             chosenFormat = formats.find(f => f.mimeType && f.mimeType.includes('audio/mp4')) ||
